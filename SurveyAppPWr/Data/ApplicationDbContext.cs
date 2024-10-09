@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SurveyAppPWr.Components.Data;
 
 namespace SurveyAppPWr.Data;
 

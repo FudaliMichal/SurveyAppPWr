@@ -9,7 +9,7 @@ public class TestownikTestModel
     }
 
     
-
+    public int TestId { get; set; }
     public string TestTitle { get; set; }
     public List<TestownikQuestionModel> TestQuestions { get; set; }
     

@@ -1,7 +1,7 @@
 
 using SurveyAppPWr.Models;
 
-namespace SurveyAppPWr.Components.Data;
+namespace SurveyAppPWr.Data;
 
 
 
@@ -11,6 +11,7 @@ public static class Mappers
     {
         return new TestownikAnswerModel
         {
+            AnswerId = testownikAnswer.AnswerId,
             AnswerText = testownikAnswer.AnswerText,
             IsCorrectAnswer = testownikAnswer.IsCorrectAnswer,
         };
@@ -20,6 +21,7 @@ public static class Mappers
     {
         return new TestownikQuestionModel
         {
+            QuestionId = testownikQuestion.QuestionId,
             QuestionText = testownikQuestion.QuestionText,
             Answers = testownikQuestion.Answers.Select(x => x.ToModel()).ToList(),
         };
@@ -29,6 +31,7 @@ public static class Mappers
     {
         return new TestownikTestModel(testownikTest.TestQuestions.Select(x => x.ToModel()).ToList())
         {
+            TestId = testownikTest.TestId,
             TestTitle = testownikTest.TestTitle,
         };
     }

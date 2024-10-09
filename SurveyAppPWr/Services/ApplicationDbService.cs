@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using SurveyAppPWr.Components.Data;
 using SurveyAppPWr.Data;
 using SurveyAppPWr.Models;
 
@@ -39,14 +38,45 @@ public class ApplicationDbService
             var temp = testEntity.ToModel();
             testList.Add(temp);
         }
-
-        // foreach (var t in testList)
-        // {
-        //     Console.WriteLine(t.TestTitle);
-        // }
         
         return testList;
-       
     }
-    
+
+    public async Task DeleteTestAsync(TestownikTestModel testEntity)
+    {
+        var todel = await _dbContext.Tests
+            .Include(x => x.TestQuestions)
+            .ThenInclude(x => x.Answers)
+            .Where(x => x.TestId == testEntity.TestId)
+            .SingleOrDefaultAsync();
+
+        foreach (var question in testEntity.TestQuestions)
+        {
+            var quest = await _dbContext.Questions
+                .Where(x => x.QuestionId == question.QuestionId)
+                .SingleOrDefaultAsync();
+            if (quest != null)
+            {
+                _dbContext.Questions.Remove(quest);
+            }
+
+            foreach (var answer in question.Answers)
+            {
+                var ans = await _dbContext.Answers
+                    .Where(x => x.AnswerId == answer.AnswerId)
+                    .SingleOrDefaultAsync();
+
+                if (ans != null)
+                {
+                    _dbContext.Answers.Remove(ans);
+                }
+            }
+        }
+        
+        if (todel is not null)
+        {
+            _dbContext.Tests.Remove(todel);
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }

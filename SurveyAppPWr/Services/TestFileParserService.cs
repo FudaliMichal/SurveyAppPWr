@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using SurveyAppPWr.Components.Data;
+using SurveyAppPWr.Data;
 using SurveyAppPWr.Models;
 
 namespace SurveyAppPWr.Services;

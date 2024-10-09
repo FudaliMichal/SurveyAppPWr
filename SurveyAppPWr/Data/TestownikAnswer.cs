@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyAppPWr.Components.Data;
+namespace SurveyAppPWr.Data;
 
 public class TestownikAnswer
 {
