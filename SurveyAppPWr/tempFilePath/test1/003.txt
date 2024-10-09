@@ -1,0 +1,7 @@
+QQ10
+3.	Świętach mnie przepuści w tym semestrze?:
+	(a) Tak
+	(b) Nie
+
+	
+	

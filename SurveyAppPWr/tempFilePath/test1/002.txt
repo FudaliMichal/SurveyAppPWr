@@ -1,0 +1,7 @@
+QQ10
+2.	Czy Jakub ma oro?:
+	(a) Nie
+	(b) Tak
+
+	
+	

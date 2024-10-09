@@ -10,7 +10,7 @@ using SurveyAppPWr.Components.Account.Pages;
 using SurveyAppPWr.Components.Account.Pages.Manage;
 using SurveyAppPWr.Data;
 
-namespace Microsoft.AspNetCore.Routing;
+namespace SurveyAppPWr.Components.Account;
 
 internal static class IdentityComponentsEndpointRouteBuilderExtensions
 {

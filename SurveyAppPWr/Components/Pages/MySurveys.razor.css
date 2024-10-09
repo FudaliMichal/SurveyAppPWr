@@ -1,0 +1,43 @@
+/* Scrollable container */
+.scrollable-container {
+    width: 100%; /* Use full width of the parent container */
+    height: calc(100vh - 100px); /* Dynamic height based on viewport */
+    overflow-y: auto; /* Enable vertical scrolling if needed */
+    padding: 20px;
+    box-sizing: border-box; /* Include padding in element's total width/height */
+}
+
+/* Grid container with fixed 4 columns */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Always 4 equal columns */
+    grid-gap: 12px; /* Space between grid items */
+    width: 100%; /* Ensure grid takes full width */
+    justify-items: stretch; /* Stretch items to fill available space */
+}
+
+/* Grid items */
+.grid-item {
+    background-color: rgba(0, 82, 255, 0.11);
+    border: 1px solid grey; /* Thin black border */
+    padding: 12px;
+    text-align: center;
+    box-sizing: border-box; /* Include padding and border in the width/height */
+    font-size: 1.2em;
+    min-height: 150px; /* Ensure a minimum height for grid items */
+    border-radius: 10px; /* Rounded corners (10px radius) */
+
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Smaller columns on medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Even smaller columns for mobile */
+    }
+}

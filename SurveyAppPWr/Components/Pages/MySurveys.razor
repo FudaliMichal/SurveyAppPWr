@@ -1,0 +1,149 @@
+@page "/MySurveys"
+@using System.IO.Compression
+@using System.IO
+@using SurveyAppPWr.Models
+@using SurveyAppPWr.Services
+
+<h3>My Surveys</h3>
+
+<Modal @ref="_modal" Title="Upload your file">
+    <BodyTemplate>
+
+        Set your survey's name:
+        <p>
+            <InputText ValueExpression="() => _testName" ValueChanged="(value) => _testName = value"></InputText>
+        </p>
+        
+        <p>
+            <InputFile OnChange="HandleSelectedFiles" accept=".zip"/>
+        </p>
+
+        @if (_uploadResult != null)
+        {
+            <p>@_uploadResult</p>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideUploadModalClick">Done</Button>
+    </FooterTemplate>
+</Modal>
+<Button Color="ButtonColor.Success" @onclick="OnShowUploadModalClick">Upload files</Button>
+
+
+<div class="scrollable-container">
+    <div class="grid">
+        @if (_testList != null)
+        {
+            foreach (var test in _testList)
+            {
+                <div class="grid-item">@test.TestTitle</div>
+            }
+        }
+    </div>
+</div>
+
+
+
+
+
+
+
+
+@inject TestFileParserService ParserService
+@inject AuthenticationStateProvider AuthProvider
+@inject ApplicationDbService DbService
+
+@code {
+    private string? _uploadResult = string.Empty;
+    private string? _curUserId = string.Empty;
+    private string _testName = string.Empty;
+    private Modal _modal = default!;
+    private List<TestownikTestModel>? _testList;
+
+    private async Task HandleSelectedFiles(InputFileChangeEventArgs e)
+    {
+        if (_testName != string.Empty)
+        {
+            var file = e.File;
+
+            if (file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                await ProcessZipFileAsync(file);
+            }
+            else
+            {
+                _uploadResult = "Please upload a .zip file.";
+            } 
+        }
+        else
+        {
+            _uploadResult = "Make sure you set a correct name for your survey!";
+        }
+        
+    }
+
+    private async Task ProcessZipFileAsync(IBrowserFile file)
+    {
+
+        var buffer = new byte[file.Size];
+        await file.OpenReadStream().ReadAsync(buffer);
+
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var tempZipPath = Path.Combine(tempDir, file.Name);
+            await File.WriteAllBytesAsync(tempZipPath, buffer);
+
+            ZipFile.ExtractToDirectory(tempZipPath, tempDir);
+            Console.WriteLine(tempDir);
+            
+            var testownikTest = await ParserService.ParseFileAsync(tempDir, _curUserId, _testName);
+            await DbService.DbInsertTestAsync(testownikTest);
+                        
+            _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count} question(s).";
+            
+        }
+        catch (Exception ex)
+        {
+            _uploadResult = $"Error processing zip file: {ex.Message}";
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, true);
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthProvider.GetAuthenticationStateAsync()).User;
+        var userStringId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+        _curUserId = userStringId;
+
+        _testList =  await DbService.TestContentsAsync(_curUserId);
+
+        foreach (var test in _testList)
+        {
+            Console.WriteLine(test.TestTitle);
+        }
+    }
+    
+
+    private async Task OnShowUploadModalClick()
+    {
+        _testName = string.Empty;
+        _uploadResult = string.Empty;
+
+        await _modal.ShowAsync();
+    }
+
+    private async Task OnHideUploadModalClick()
+    {
+        await _modal.HideAsync();
+        _testList =  await DbService.TestContentsAsync(_curUserId);
+    }
+}
