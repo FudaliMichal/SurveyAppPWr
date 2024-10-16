@@ -71,4 +71,8 @@
       <_ContentIncludedByDefault Remove="wwwroot\favicon.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <AdditionalFiles Include="Components\Pages\Create.razor" />
+    </ItemGroup>
+
 </Project>

@@ -55,8 +55,8 @@
 @inject ApplicationDbService DbService
 
 @code {
-    private string? _uploadResult = string.Empty;
-    private string? _curUserId = string.Empty;
+    private string _uploadResult = string.Empty;
+    private string _curUserId = string.Empty;
     private string _testName = string.Empty;
     private Modal _modal = default!;
     private List<TestownikTestModel>? _testList;

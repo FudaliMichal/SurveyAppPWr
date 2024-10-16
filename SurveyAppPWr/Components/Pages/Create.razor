@@ -1,0 +1,190 @@
+@page "/create"
+@using SurveyAppPWr.Data
+@using SurveyAppPWr.Services
+
+<h3>Create your survey/test</h3>
+
+<div class="button-container">
+    @switch(_pageCount)
+    {
+        case 0:
+            <Button Color="ButtonColor.Primary" Class="me-3" @onclick="NextCallback">Next</Button>
+            break;
+        case 1:
+            <Button Color="ButtonColor.Primary" Class="me-1" @onclick="BackCallback">Back</Button>
+            <Button Color="ButtonColor.Primary" Class="me-3" @onclick="NextCallback">Next</Button>
+            break;
+        case 2:
+            <Button Color="ButtonColor.Primary" Class="me-1" @onclick="BackCallback">Back</Button>
+            <Button Color="ButtonColor.Success" @onclick="FinishCallback">Finish</Button>
+            break;
+    }
+</div>
+
+@if (_pageCount == 0)
+{
+    @* <p>Choose between a test or a survey</p> *@
+    
+    <div>
+        
+        Set your test's name:
+        <p>
+            <InputText ValueExpression="() => _testName" ValueChanged="(value) => _testName = value"></InputText>
+        </p>
+    </div>
+}
+
+@if (_pageCount == 1)
+{
+    <div>
+        Add your questions:
+        
+        @if (_tests?.TestQuestions is not null)
+        {
+            foreach (var question in _tests.TestQuestions)
+            {
+                <p>@question.QuestionText</p>
+
+                if (question?.Answers is not null)
+                {
+                    foreach (var answer in question.Answers)
+                    {
+                        <p>@answer.AnswerText</p>
+                    }
+                }
+                <Button Color="ButtonColor.Primary" @onclick="() => OnShowAnswerModalClick(question)">+</Button>
+            }
+        }
+        <div>
+            <Button Color="ButtonColor.Primary" @onclick="OnShowQuestionModalClick">+</Button>
+        </div>
+    </div>
+}
+
+
+
+<Modal @ref="_questionModal" Title="What's your question?">
+    <BodyTemplate>
+        
+        <InputText ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
+    
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideQuestionModalClick">Add question</Button>
+    </FooterTemplate>
+</Modal>
+
+<Modal @ref="_answerModal" Title="Set answer">
+    <BodyTemplate>
+        <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
+
+        <div>Is this answer true or false?</div>
+        <div>
+            <Button Color="ButtonColor.Success" @onclick="() => _isAnswerTrue = true">True</Button>
+            <Button Color="ButtonColor.Danger" @onclick="() => _isAnswerTrue = false">False</Button>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideAnswerModalClick">Add answer</Button>
+    </FooterTemplate>
+</Modal>
+
+@inject AuthenticationStateProvider AuthProvider
+@inject ApplicationDbService DbService
+
+@code {
+    private int _pageCount;
+    private TestownikQuestion? _currentQuestion;
+    private int _currentQuestionIndex = -1;
+    
+    private TestownikTest _tests = default!;
+    private string _testName = string.Empty;
+    
+    private Modal _answerModal = default!;
+    private string _answerText = string.Empty;
+    private bool _isAnswerTrue;
+    
+    private Modal _questionModal = default!;
+    private string _questionText = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthProvider.GetAuthenticationStateAsync()).User;
+        var userStringId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+        
+        _tests = new TestownikTest
+        {
+            UserId = userStringId,
+            TestTitle = string.Empty,
+            TestQuestions = []
+        };
+
+        _pageCount = 0;
+    }
+
+    private void NextCallback()
+    {
+        _tests.TestTitle = _testName;
+        
+        _pageCount++;
+    }
+
+    private void BackCallback()
+    {
+        _pageCount--;
+    }
+
+    private async Task FinishCallback()
+    {
+        await DbService.DbInsertTestAsync(_tests);
+        
+        //confirmation toast
+    }
+    
+    private async Task OnShowQuestionModalClick()
+    {
+        await _questionModal.ShowAsync();
+    }
+    
+    private async Task OnHideQuestionModalClick()
+    {
+        var question = new TestownikQuestion
+        {
+            QuestionText = _questionText,
+            Answers = []
+        };
+
+        _tests.TestQuestions.Add(question);
+        await _questionModal.HideAsync();
+
+        // StateHasChanged();
+    }
+    
+    
+    private async Task OnShowAnswerModalClick(TestownikQuestion question)
+    {
+        _currentQuestion = question;
+        _currentQuestionIndex = _tests.TestQuestions.IndexOf(question);
+        await _answerModal.ShowAsync();
+    }
+    
+    private async Task OnHideAnswerModalClick()
+    {
+        if (_currentQuestion != null && _currentQuestionIndex >= 0)
+        {
+            var tempAns = new TestownikAnswer
+            {
+                AnswerText = _answerText,
+                IsCorrectAnswer = _isAnswerTrue
+            };
+
+            _tests.TestQuestions[_currentQuestionIndex].Answers.Add(tempAns);
+
+            await _answerModal.HideAsync();
+            
+            StateHasChanged();
+        }
+    }
+    
+}
