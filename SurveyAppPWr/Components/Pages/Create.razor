@@ -1,6 +1,7 @@
 @page "/create"
 @using SurveyAppPWr.Data
 @using SurveyAppPWr.Services
+@using System.Drawing
 
 <h3>Create your survey/test</h3>
 
@@ -36,28 +37,38 @@
 
 @if (_pageCount == 1)
 {
-    <div>
-        Add your questions:
+    <div class="scrollable-container">
+        <h4>
+            Add your questions:
+            <Button Color="ButtonColor.Primary" @onclick="OnShowQuestionModalClick">+</Button>
+        </h4> 
+        
         
         @if (_tests?.TestQuestions is not null)
         {
+            var questionNr = 1;
             foreach (var question in _tests.TestQuestions)
             {
-                <p>@question.QuestionText</p>
+                <div class="question" >@questionNr. @question.QuestionText
+                    <Button Color="ButtonColor.Primary" @onclick="() => OnShowAnswerModalClick(question)">Add answer</Button>
+                </div>
 
-                if (question?.Answers is not null)
-                {
-                    foreach (var answer in question.Answers)
+                <div class="answers">
+                    @if (question?.Answers is not null)
                     {
-                        <p>@answer.AnswerText</p>
+                        var answerNr = 1;
+                        foreach (var answer in question.Answers)
+                        {
+                            <div>(@answerNr) @answer.AnswerText  (@answer.IsCorrectAnswer.ToString())</div>
+                            
+                            answerNr++;
+                        }
                     }
-                }
-                <Button Color="ButtonColor.Primary" @onclick="() => OnShowAnswerModalClick(question)">+</Button>
+                </div>
+                
+                questionNr++;
             }
         }
-        <div>
-            <Button Color="ButtonColor.Primary" @onclick="OnShowQuestionModalClick">+</Button>
-        </div>
     </div>
 }
 
@@ -79,9 +90,15 @@
         <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
 
         <div>Is this answer true or false?</div>
+        
         <div>
             <Button Color="ButtonColor.Success" @onclick="() => _isAnswerTrue = true">True</Button>
             <Button Color="ButtonColor.Danger" @onclick="() => _isAnswerTrue = false">False</Button>
+        </div>
+        
+        <div>
+            Current value: 
+            @_isAnswerTrue.ToString()
         </div>
     </BodyTemplate>
     <FooterTemplate>
@@ -125,9 +142,12 @@
 
     private void NextCallback()
     {
-        _tests.TestTitle = _testName;
-        
-        _pageCount++;
+        if (_testName != string.Empty)
+        {
+            _tests.TestTitle = _testName;
+            
+            _pageCount++;
+        }
     }
 
     private void BackCallback()
@@ -144,26 +164,31 @@
     
     private async Task OnShowQuestionModalClick()
     {
+        _questionText = string.Empty;    
+        
         await _questionModal.ShowAsync();
     }
     
     private async Task OnHideQuestionModalClick()
     {
-        var question = new TestownikQuestion
+        if (_questionText != string.Empty)
         {
-            QuestionText = _questionText,
-            Answers = []
-        };
+            var question = new TestownikQuestion
+            {
+                QuestionText = _questionText,
+                Answers = []
+            };
 
-        _tests.TestQuestions.Add(question);
-        await _questionModal.HideAsync();
-
-        // StateHasChanged();
+            _tests.TestQuestions.Add(question);
+            await _questionModal.HideAsync();
+        }
     }
     
     
     private async Task OnShowAnswerModalClick(TestownikQuestion question)
     {
+        _answerText = string.Empty;
+        
         _currentQuestion = question;
         _currentQuestionIndex = _tests.TestQuestions.IndexOf(question);
         await _answerModal.ShowAsync();
@@ -171,7 +196,7 @@
     
     private async Task OnHideAnswerModalClick()
     {
-        if (_currentQuestion != null && _currentQuestionIndex >= 0)
+        if (_currentQuestion != null && _currentQuestionIndex >= 0 && _answerText != string.Empty)
         {
             var tempAns = new TestownikAnswer
             {
@@ -183,7 +208,7 @@
 
             await _answerModal.HideAsync();
             
-            StateHasChanged();
+            //StateHasChanged();
         }
     }
     

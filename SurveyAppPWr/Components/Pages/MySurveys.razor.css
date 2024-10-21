@@ -1,4 +1,3 @@
-/* Scrollable container */
 .scrollable-container {
     width: 100%; /* Use full width of the parent container */
     height: calc(100vh - 100px); /* Dynamic height based on viewport */
@@ -7,7 +6,6 @@
     box-sizing: border-box; /* Include padding in element's total width/height */
 }
 
-/* Grid container with fixed 4 columns */
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* Always 4 equal columns */
@@ -16,20 +14,27 @@
     justify-items: stretch; /* Stretch items to fill available space */
 }
 
-/* Grid items */
 .grid-item {
+    display: flex;
+    flex-direction: column; /* Stack content vertically */
+    justify-content: space-between; /* Space out content with buttons at the bottom */
     background-color: rgba(0, 82, 255, 0.11);
-    border: 1px solid grey; /* Thin black border */
+    border: 1px solid grey;
     padding: 12px;
     text-align: center;
-    box-sizing: border-box; /* Include padding and border in the width/height */
+    box-sizing: border-box;
     font-size: 1.2em;
-    min-height: 150px; /* Ensure a minimum height for grid items */
-    border-radius: 10px; /* Rounded corners (10px radius) */
-
+    min-height: 200px;
+    border-radius: 10px;
 }
 
-/* Responsive adjustments for smaller screens */
+.button-container {
+    display: flex;
+    justify-content: center; /* Center the buttons horizontally */
+    gap: 5px; /* 5px spacing between buttons */
+    margin-top: auto; /* Push the button container to the bottom of the grid item */
+}
+
 @media (max-width: 768px) {
     .grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Smaller columns on medium screens */

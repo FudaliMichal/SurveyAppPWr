@@ -38,9 +38,11 @@
             {
                 <div class="grid-item">
                     @test.TestTitle
-
-                    <Button Color="ButtonColor.Danger" @onclick="() => DeleteTestCallback(test)">Delete</Button>
-                    <Button Color="ButtonColor.Primary">Download</Button>
+                    <div class="button-container">
+                        <Button Color="ButtonColor.Primary">Open</Button>
+                        <Button Color="ButtonColor.Primary" @onclick="() => DownloadCallback(test)">Download</Button>
+                        <Button Color="ButtonColor.Danger" @onclick="() => DeleteTestCallback(test)">Delete</Button>
+                    </div>
                 </div>
             }
         }
@@ -81,7 +83,6 @@
         {
             _uploadResult = "Make sure you set a correct name for your survey!";
         }
-        
     }
 
     private async Task ProcessZipFileAsync(IBrowserFile file)
@@ -170,5 +171,46 @@
 
         return confirmation;
     }
+
+    private async Task DownloadCallback(TestownikTestModel test)
+    {
+        var questions = test.TestQuestions;
+    
+        using var memoryStream = new MemoryStream();
+    
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+        {
+            int questionNumber = 1;
+        
+            foreach (var question in questions)
+            {
+                var questionText = $"{questionNumber}: {question.QuestionText}\n";
+
+                if (question.Answers != null)
+                {
+                    int answerNumber = 1;
+                    foreach (var answer in question.Answers)
+                    {
+                        questionText += $"\t{answerNumber}: {answer.AnswerText}\n";
+                        answerNumber++;
+                    }
+                }
+            
+                var zipEntry = archive.CreateEntry($"{questionNumber}.txt");
+                using var entryStream = zipEntry.Open();
+                using var streamWriter = new StreamWriter(entryStream);
+            
+                await streamWriter.WriteAsync(questionText);
+            
+                questionNumber++;
+            }
+        }
+    
+        var zipFileName = $"{test.TestTitle}.zip";
+    
+        var zipBytes = memoryStream.ToArray();
+        //dodaj controler
+    }
+
     
 }
