@@ -68,10 +68,13 @@ public class TestFileParserService
 
         
         var questionText = allLines[1];
+        questionText = Regex.Replace(questionText, @"^\d+\.\s*\t*", "");
+        Console.WriteLine(questionText);
         
         for (var i = 0; i < answers.Count; i++)
         {
-            answers[i].AnswerText = allLines[i+2];
+            answers[i].AnswerText = Regex.Replace(allLines[i + 2], @"^\t\([a-z]\)\s", "");
+            Console.WriteLine(answers[i].AnswerText);
         }
 
         TestownikQuestion question = new()

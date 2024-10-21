@@ -9,7 +9,6 @@ public class ApplicationDbService
 {
     private readonly ApplicationDbContext _dbContext;
 
-
     public ApplicationDbService(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -78,5 +77,18 @@ public class ApplicationDbService
             _dbContext.Tests.Remove(todel);
             await _dbContext.SaveChangesAsync();
         }
+    }
+
+    public async Task<TestownikTestModel> GetTestByIdAsync(int testId)
+    {
+        var test = _dbContext.Tests
+            .AsNoTracking()
+            .Include(x => x.TestQuestions)
+            .ThenInclude(x => x.Answers)
+            .Where(x => x.TestId == testId)
+            .SingleOrDefaultAsync()
+            .Result;
+        
+        return test.ToModel();
     }
 }

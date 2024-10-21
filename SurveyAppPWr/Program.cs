@@ -21,7 +21,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 
 builder.Services.AddScoped<TestFileParserService>();
 builder.Services.AddScoped<ApplicationDbService>();
-
+builder.Services.AddControllers();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -43,6 +43,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -62,6 +63,8 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapControllers();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
