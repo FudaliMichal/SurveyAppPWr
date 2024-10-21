@@ -19,7 +19,6 @@ namespace SurveyAppPWr.Controller
         public async Task<IActionResult> DownloadTest(int testId)
         {
             var test = await _dbService.GetTestByIdAsync(testId);
-            // Console.WriteLine("Controller<----------------------------------");
             
             if (test == null)
             {
@@ -27,7 +26,6 @@ namespace SurveyAppPWr.Controller
             }
 
             var questions = test.TestQuestions;
-
             using var memoryStream = new MemoryStream();
 
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -55,7 +53,7 @@ namespace SurveyAppPWr.Controller
                         }
                     }
 
-                    var zipEntry = archive.CreateEntry($"{questionNumber}.txt");
+                    var zipEntry = archive.CreateEntry($"{questionNumber:D3}.txt");
                     await using var entryStream = zipEntry.Open();
                     await using var streamWriter = new StreamWriter(entryStream);
 
