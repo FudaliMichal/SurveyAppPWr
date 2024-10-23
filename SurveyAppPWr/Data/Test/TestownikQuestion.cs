@@ -1,13 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace SurveyAppPWr.Data;
+namespace SurveyAppPWr.Data.Test;
 
 public class TestownikQuestion
 {
-    [Key]
+    [Key] 
     public int QuestionId { get; set; }
-    
     public string QuestionText { get; set; } = null!;
-
     public List<TestownikAnswer> Answers { get; set; } = null!;
 }

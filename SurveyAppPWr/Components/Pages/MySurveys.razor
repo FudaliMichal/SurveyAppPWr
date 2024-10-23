@@ -3,6 +3,7 @@
 @using System.IO
 @using Microsoft.AspNetCore.Mvc
 @using SurveyAppPWr.Models
+@using SurveyAppPWr.Models.Test
 @using SurveyAppPWr.Services
 
 <h3>My Surveys</h3>
@@ -53,7 +54,8 @@
 <ConfirmDialog @ref="_dialog" />
 
 
-@inject TestFileParserService ParserService
+@inject TestFileParserService TestParserService
+@inject SurveyFileParserService SurveyParserService
 @inject AuthenticationStateProvider AuthProvider
 @inject ApplicationDbService DbService
 
@@ -82,7 +84,7 @@
         }
         else
         {
-            _uploadResult = "Make sure you set a correct name for your survey!";
+            _uploadResult = "Make sure you set a correct name for your file!";
         }
     }
 
@@ -94,19 +96,39 @@
 
         var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
-
+        
         try
         {
             var tempZipPath = Path.Combine(tempDir, file.Name);
             await File.WriteAllBytesAsync(tempZipPath, buffer);
 
             ZipFile.ExtractToDirectory(tempZipPath, tempDir);
-            Console.WriteLine(tempDir);
+            // Console.WriteLine(tempDir);
             
-            var testownikTest = await ParserService.ParseFileAsync(tempDir, _curUserId, _testName);
-            await DbService.DbInsertTestAsync(testownikTest);
-                        
-            _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count} question(s).";
+            //rozroznianie miedzy ankieta a testem
+            var infoFilePath = Path.Combine(tempDir, "!INFO.txt");
+            if (File.Exists(infoFilePath))
+            {
+                _uploadResult = $"!INFO.txt found. Processing survey...";
+
+                var survey = await SurveyParserService.ParseFileAsync(tempDir, _curUserId, _testName);
+                await DbService.DbInsertSurveyAsync(survey);
+                
+                _uploadResult = $"Uploaded '{file.Name}' successfully with !INFO.txt and processed {survey.SQuestions.Count()} question(s).";
+
+            }
+            else
+            {
+                _uploadResult = $"!INFO.txt not found. Processing test...";
+
+                
+                var testownikTest = await TestParserService.ParseFileAsync(tempDir, _curUserId, _testName);
+                await DbService.DbInsertTestAsync(testownikTest);
+                            
+                _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count} question(s).";
+            }
+
+
             
         }
         catch (Exception ex)

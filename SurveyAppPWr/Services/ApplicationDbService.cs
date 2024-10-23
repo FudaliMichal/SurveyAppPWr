@@ -1,31 +1,40 @@
 using Microsoft.EntityFrameworkCore;
 using SurveyAppPWr.Data;
-using SurveyAppPWr.Models;
+using SurveyAppPWr.Data.Survey;
+using SurveyAppPWr.Data.Test;
+using SurveyAppPWr.Models.Test;
 
 namespace SurveyAppPWr.Services;
 
 
 public class ApplicationDbService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly SurveyAppDbContext _surveyAppDbContext;
 
-    public ApplicationDbService(ApplicationDbContext dbContext)
+    public ApplicationDbService(SurveyAppDbContext surveyAppDbContext)
     {
-        _dbContext = dbContext;
+        _surveyAppDbContext = surveyAppDbContext;
     }
     
     
     public async Task DbInsertTestAsync(TestownikTest testEntity)
     {
-        _dbContext.Tests.Add(testEntity);
-        await _dbContext.SaveChangesAsync();
+        _surveyAppDbContext.Tests.Add(testEntity);
+        await _surveyAppDbContext.SaveChangesAsync();
     }
+
+    public async Task DbInsertSurveyAsync(Survey surveyEntity)
+    {
+        _surveyAppDbContext.Surveys.Add(surveyEntity);
+        await _surveyAppDbContext.SaveChangesAsync();
+    }
+    
     
     public async Task<List<TestownikTestModel>?> TestContentsAsync(string? userid)
     {
         var testList = new List<TestownikTestModel>();
         
-        var test = await _dbContext.Tests
+        var test = await _surveyAppDbContext.Tests
             .AsNoTracking()
             .Include(x => x.TestQuestions)
             .ThenInclude(x => x.Answers)
@@ -43,7 +52,7 @@ public class ApplicationDbService
 
     public async Task DeleteTestAsync(TestownikTestModel testEntity)
     {
-        var todel = await _dbContext.Tests
+        var todel = await _surveyAppDbContext.Tests
             .Include(x => x.TestQuestions)
             .ThenInclude(x => x.Answers)
             .Where(x => x.TestId == testEntity.TestId)
@@ -51,37 +60,37 @@ public class ApplicationDbService
 
         foreach (var question in testEntity.TestQuestions)
         {
-            var quest = await _dbContext.Questions
+            var quest = await _surveyAppDbContext.Questions
                 .Where(x => x.QuestionId == question.QuestionId)
                 .SingleOrDefaultAsync();
             if (quest != null)
             {
-                _dbContext.Questions.Remove(quest);
+                _surveyAppDbContext.Questions.Remove(quest);
             }
 
             foreach (var answer in question.Answers)
             {
-                var ans = await _dbContext.Answers
+                var ans = await _surveyAppDbContext.Answers
                     .Where(x => x.AnswerId == answer.AnswerId)
                     .SingleOrDefaultAsync();
 
                 if (ans != null)
                 {
-                    _dbContext.Answers.Remove(ans);
+                    _surveyAppDbContext.Answers.Remove(ans);
                 }
             }
         }
         
         if (todel is not null)
         {
-            _dbContext.Tests.Remove(todel);
-            await _dbContext.SaveChangesAsync();
+            _surveyAppDbContext.Tests.Remove(todel);
+            await _surveyAppDbContext.SaveChangesAsync();
         }
     }
 
     public async Task<TestownikTestModel> GetTestByIdAsync(int testId)
     {
-        var test = _dbContext.Tests
+        var test = _surveyAppDbContext.Tests
             .AsNoTracking()
             .Include(x => x.TestQuestions)
             .ThenInclude(x => x.Answers)

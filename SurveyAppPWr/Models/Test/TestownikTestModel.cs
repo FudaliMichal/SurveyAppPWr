@@ -1,4 +1,4 @@
-namespace SurveyAppPWr.Models;
+namespace SurveyAppPWr.Models.Test;
 
 public class TestownikTestModel
 {
