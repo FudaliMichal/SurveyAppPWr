@@ -43,14 +43,14 @@ namespace SurveyAppPWr.Controller
                         questionText += answer.IsCorrectAnswer ? "1" : "0";
                     }
                     
-                    questionText += $"\n{questionNumber}.\t{question.QuestionText}\n";
+                    questionText += $"\n{questionNumber}.\t{question.QuestionText}";
 
                     if (question.Answers != null)
                     {
                         char answerNumber = 'a';
                         foreach (var answer in question.Answers)
                         {
-                            questionText += $"\t({answerNumber}) {answer.AnswerText}\n";
+                            questionText += $"\n\t({answerNumber}) {answer.AnswerText}";
                             answerNumber++;
                         }
                     }
