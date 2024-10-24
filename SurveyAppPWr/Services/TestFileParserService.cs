@@ -17,9 +17,6 @@ public class TestFileParserService
         foreach (var file in files)
         {
             var question = await AssembleQuestion(file);
-            //wyswietlanie zczytanych plikow w konsoli
-            // CWQuestions(question.ToModel());
-            
             questions.Add(question);
         }
         
@@ -82,16 +79,6 @@ public class TestFileParserService
         };
         
         return question;
-    }
-    
-    private void CWQuestions(TestownikQuestionModel question)
-    {
-        Console.WriteLine($"\n{question.QuestionText}");
-        foreach (var lineAnswer in question.Answers)
-        {
-            Console.WriteLine(lineAnswer.AnswerText);
-            Console.WriteLine($"\t {lineAnswer.IsCorrectAnswer}");
-        }
     }
     
 }

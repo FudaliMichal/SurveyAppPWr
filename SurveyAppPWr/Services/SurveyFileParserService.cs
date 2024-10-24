@@ -22,7 +22,6 @@ public class SurveyFileParserService
         for (var i = 1; i < files.Count(); i++)
         {
             var question = await AssembleQuestion(files[i]);
-            
             questions.Add(question);
         }
         
@@ -89,13 +88,4 @@ public class SurveyFileParserService
         return question;
     }
     
-    private void CWQuestions(TestownikQuestionModel question)
-    {
-        Console.WriteLine($"\n{question.QuestionText}");
-        foreach (var lineAnswer in question.Answers)
-        {
-            Console.WriteLine(lineAnswer.AnswerText);
-            Console.WriteLine($"\t {lineAnswer.IsCorrectAnswer}");
-        }
-    }
 }
