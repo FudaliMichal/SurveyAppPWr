@@ -44,7 +44,9 @@ public class SurveyFileParserService
 
         var fileName = file.FullName;
         var fileContents = await File.ReadAllTextAsync(fileName);
-        var splitLines = fileContents.Split('\n');
+        var splitLines = fileContents.Split('\n')
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .ToArray();
 
 
         Question question = new();
