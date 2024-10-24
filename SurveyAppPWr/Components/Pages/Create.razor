@@ -1,7 +1,6 @@
 @page "/create"
-@using SurveyAppPWr.Data
 @using SurveyAppPWr.Services
-@using System.Drawing
+@using SurveyAppPWr.Data.Survey
 @using SurveyAppPWr.Data.Test
 
 <h3>Create your survey/test</h3>
@@ -14,68 +13,121 @@
             break;
         case 1:
             <Button Color="ButtonColor.Primary" Class="me-1" @onclick="BackCallback">Back</Button>
-            <Button Color="ButtonColor.Primary" Class="me-3" @onclick="NextCallback">Next</Button>
-            break;
-        case 2:
-            <Button Color="ButtonColor.Primary" Class="me-1" @onclick="BackCallback">Back</Button>
-            <Button Color="ButtonColor.Success" @onclick="FinishCallback">Finish</Button>
+            <Button Color="ButtonColor.Primary" Class="me-3" @onclick="FinishCallback">Finish</Button>
             break;
     }
 </div>
 
 @if (_pageCount == 0)
 {
-    @* <p>Choose between a test or a survey</p> *@
-    
     <div>
+        <Button Color="ButtonColor.Primary" @onclick="() => _type = true">Survey</Button>
+        <Button Color="ButtonColor.Primary" @onclick="() => _type = false">Test</Button>
+    </div>
         
-        Set your test's name:
+    <div>
+         Set title:
         <p>
-            <InputText ValueExpression="() => _testName" ValueChanged="(value) => _testName = value"></InputText>
+            <InputText ValueExpression="() => _fileTitle" ValueChanged="(value) => _fileTitle = value"></InputText>
         </p>
+
+        @if (_type)
+        {
+            <div>
+                Who is the author?
+                <p>
+                    <InputText ValueExpression="() => _author" ValueChanged="(value) => _author = value"></InputText>
+                </p>
+                
+                Do you want your survey to be public?
+                <div>
+                    <Button Color="ButtonColor.Primary" @onclick="() => _isPublic = true">Yes</Button>
+                    <Button Color="ButtonColor.Primary" @onclick="() => _isPublic = false">No</Button>
+                </div>
+                
+            </div>
+        }
     </div>
 }
 
 @if (_pageCount == 1)
 {
     <div class="scrollable-container">
-        <h4>
-            Add your questions:
-            <Button Color="ButtonColor.Primary" @onclick="OnShowQuestionModalClick">+</Button>
-        </h4> 
         
-        
-        @if (_tests?.TestQuestions is not null)
+        @switch (_type)
         {
-            var questionNr = 1;
-            foreach (var question in _tests.TestQuestions)
-            {
-                <div class="question" >@questionNr. @question.QuestionText
-                    <Button Color="ButtonColor.Primary" @onclick="() => OnShowAnswerModalClick(question)">Add answer</Button>
-                </div>
-
-                <div class="answers">
-                    @if (question?.Answers is not null)
+            case false:
+                <h4>
+                    Add your questions:
+                    <Button Color="ButtonColor.Primary" @onclick="OnShowQuestionModalClick">+</Button>
+                </h4> 
+                if (_tests?.TestQuestions != null)
+                {
+                    var questionNr = 1;
+                    foreach (var question in _tests.TestQuestions)
                     {
-                        var answerNr = 1;
-                        foreach (var answer in question.Answers)
-                        {
-                            <div>(@answerNr) @answer.AnswerText  (@answer.IsCorrectAnswer.ToString())</div>
+                        <div class="question" >@questionNr. @question.QuestionText
+                            <Button Color="ButtonColor.Primary" @onclick="() => OnShowAnswerModalClick(question)">Add answer</Button>
+                        </div>
+
+                        <div class="answers">
+                            @if (question?.Answers != null)
+                            {
+                                var answerNr = 1;
+                                foreach (var answer in question.Answers)
+                                {
+                                    <div>(@answerNr) @answer.AnswerText  (@answer.IsCorrectAnswer.ToString())</div>
                             
-                            answerNr++;
-                        }
-                    }
-                </div>
+                                    answerNr++;
+                                }
+                            }
+                        </div>
                 
-                questionNr++;
-            }
+                        questionNr++;
+                    }
+                }
+                break;
+            case true:
+                <h4>
+                    Add your questions:
+                    <Button Color="ButtonColor.Primary" @onclick="OnShowSQuestionModalClick">+</Button>
+                </h4> 
+                if (_survey?.SQuestions != null)
+                {
+                    var questionNr = 1;
+                    foreach (var question in _survey.SQuestions)
+                    {
+                        <div class="question" >@questionNr. @question.SQuestionText Is question open: @question.SQuestionType
+                            @if (question.SQuestionType == false)
+                            {
+                                <Button Color="ButtonColor.Primary" @onclick="() => OnShowSAnswerModalClick(question)">Add answer</Button>
+                            }
+                        </div>
+
+                        <div class="answers">
+                            @if (question?.SAnswers != null)
+                            {
+                                var answerNr = 1;
+                                foreach (var answer in question.SAnswers)
+                                {
+                                    <div>(@answerNr) @answer.SAnswerText</div>
+                            
+                                    answerNr++;
+                                }
+                            }
+                        </div>
+                
+                        questionNr++;
+                    }
+                }
+            break;
         }
     </div>
 }
 
 
 
-<Modal @ref="_questionModal" Title="What's your question?">
+<Modal @ref="_testQuestionModal" Title="What's your question?">
     <BodyTemplate>
         
         <InputText ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
@@ -86,7 +138,7 @@
     </FooterTemplate>
 </Modal>
 
-<Modal @ref="_answerModal" Title="Set answer">
+<Modal @ref="_testAnswerModal" Title="Set answer">
     <BodyTemplate>
         <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
 
@@ -107,23 +159,65 @@
     </FooterTemplate>
 </Modal>
 
+
+
+<Modal @ref="_surveyQuestionModal" Title="What's your question?">
+    <BodyTemplate>
+        <InputText ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
+
+        <p>
+            <div>Set question type:</div>
+            <Button Color="ButtonColor.Primary" @onclick="() => _questionType = true">Open-text question</Button>
+            <Button Color="ButtonColor.Primary" @onclick="() => _questionType = false">Closed-ended question</Button>
+        </p>
+        
+    
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideSQuestionModalClick">Add question</Button>
+    </FooterTemplate>
+</Modal>
+
+<Modal @ref="_surveyAnswerModal" Title="Set answer">
+    <BodyTemplate>
+        <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideSAnswerModalClick">Add answer</Button>
+    </FooterTemplate>
+</Modal>
+
+
 @inject AuthenticationStateProvider AuthProvider
 @inject ApplicationDbService DbService
+@inject NavigationManager Navi
 
 @code {
     private int _pageCount;
     private TestownikQuestion? _currentQuestion;
+    private Question? _currentSQuestion;
     private int _currentQuestionIndex = -1;
+    private int _currentSQuestionIndex = -1;
+    private bool _type = true;
     
-    private TestownikTest _tests = default!;
-    private string _testName = string.Empty;
+    private TestownikTest _tests = null!;
+    private Survey _survey = null!;
+    private string _fileTitle = string.Empty;
     
-    private Modal _answerModal = default!;
+    private Modal _testAnswerModal = null!;
+    private Modal _surveyAnswerModal = null!;
     private string _answerText = string.Empty;
     private bool _isAnswerTrue;
     
-    private Modal _questionModal = default!;
+    private Modal _testQuestionModal = null!;
+    private Modal _surveyQuestionModal = null!;
     private string _questionText = string.Empty;
+
+    private string _author = string.Empty;
+    private DateOnly _creationDate = DateOnly.FromDateTime(DateTime.Now);
+    private bool _isPublic;
+    private bool _questionType;
 
 
     protected override async Task OnInitializedAsync()
@@ -138,14 +232,24 @@
             TestQuestions = []
         };
 
+        _survey = new Survey
+        {
+            SurveyTitle = string.Empty,
+            CreationDate = _creationDate,
+            Author = string.Empty,
+            UserId = userStringId,
+            SQuestions = []
+        };
+        
         _pageCount = 0;
     }
 
     private void NextCallback()
     {
-        if (_testName != string.Empty)
+        if (_fileTitle != string.Empty)
         {
-            _tests.TestTitle = _testName;
+            _tests.TestTitle = _fileTitle;
+            _survey.Author = _author;
             
             _pageCount++;
         }
@@ -158,16 +262,34 @@
 
     private async Task FinishCallback()
     {
-        await DbService.DbInsertTestAsync(_tests);
-        
-        //confirmation toast
+        switch (_type)
+        {
+            case true:
+                _survey.SurveyTitle = _fileTitle;
+                _survey.IsPublic = _isPublic;
+                await DbService.DbInsertSurveyAsync(_survey);
+                break;
+            case false:
+                await DbService.DbInsertTestAsync(_tests);
+                break;
+        }
+
+        Navi.NavigateTo("/MySurveys");
     }
     
     private async Task OnShowQuestionModalClick()
     {
         _questionText = string.Empty;    
         
-        await _questionModal.ShowAsync();
+        await _testQuestionModal.ShowAsync();
+    }
+    
+    private async Task OnShowSQuestionModalClick()
+    {
+        _questionText = string.Empty;
+        _author = string.Empty;
+        
+        await _surveyQuestionModal.ShowAsync();
     }
     
     private async Task OnHideQuestionModalClick()
@@ -181,7 +303,40 @@
             };
 
             _tests.TestQuestions.Add(question);
-            await _questionModal.HideAsync();
+            await _testQuestionModal.HideAsync();
+        }
+    }
+    
+    private async Task OnHideSQuestionModalClick()
+    {
+        if (_questionText != string.Empty)
+        {
+            switch (_questionType)
+            {
+                case true:
+                {
+                    var questionOpen = new Question
+                    {
+                        SQuestionType = _questionType,
+                        SQuestionText = _questionText,
+                    };
+                    _survey.SQuestions.Add(questionOpen);
+                    break;
+                }
+                case false:
+                {
+                    var questionClosed = new Question
+                    {
+                        SQuestionType = _questionType,
+                        SQuestionText = _questionText,
+                        SAnswers = [],
+                    };
+                    _survey.SQuestions.Add(questionClosed);
+                    break;
+                }
+            }
+
+            await _surveyQuestionModal.HideAsync();
         }
     }
     
@@ -192,8 +347,18 @@
         
         _currentQuestion = question;
         _currentQuestionIndex = _tests.TestQuestions.IndexOf(question);
-        await _answerModal.ShowAsync();
+        await _testAnswerModal.ShowAsync();
     }
+    
+    private async Task OnShowSAnswerModalClick(Question question)
+    {
+        _answerText = string.Empty;
+        
+        _currentSQuestion = question;
+        _currentSQuestionIndex = _survey.SQuestions.IndexOf(question);
+        await _surveyAnswerModal.ShowAsync();
+    }
+    
     
     private async Task OnHideAnswerModalClick()
     {
@@ -207,10 +372,23 @@
 
             _tests.TestQuestions[_currentQuestionIndex].Answers.Add(tempAns);
 
-            await _answerModal.HideAsync();
+            await _testAnswerModal.HideAsync();
             
-            //StateHasChanged();
         }
     }
     
+    private async Task OnHideSAnswerModalClick()
+    {
+        if (_currentSQuestion != null && _currentSQuestionIndex >= 0 && _answerText != string.Empty)
+        {
+            var tempAns = new Data.Survey.Answer
+            {
+                SAnswerText = _answerText
+            };
+
+            _survey.SQuestions[_currentSQuestionIndex].SAnswers?.Add(tempAns);
+
+            await _surveyAnswerModal.HideAsync();
+        }
+    }
 }
