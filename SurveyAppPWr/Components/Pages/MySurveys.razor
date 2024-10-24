@@ -3,6 +3,7 @@
 @using System.IO
 @using Microsoft.AspNetCore.Mvc
 @using SurveyAppPWr.Models
+@using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Models.Test
 @using SurveyAppPWr.Services
 
@@ -10,12 +11,6 @@
 
 <Modal @ref="_modal" Title="Upload your file">
     <BodyTemplate>
-
-        Set your survey's name:
-        <p>
-            <InputText ValueExpression="() => _testName" ValueChanged="(value) => _testName = value"></InputText>
-        </p>
-        
         <p>
             <InputFile OnChange="HandleSelectedFiles" accept=".zip"/>
         </p>
@@ -31,9 +26,27 @@
 </Modal>
 <Button Color="ButtonColor.Success" @onclick="OnShowUploadModalClick">Upload files</Button>
 
+<ConfirmDialog @ref="_dialog" />
 
 <div class="scrollable-container">
     <div class="grid">
+        @if (_surveyList != null)
+        {
+            foreach (var survey in _surveyList)
+            {
+                <div class="grid-item">
+                    @survey.SurveyTitle @survey.Author @survey.CreationDate @survey.IsPublic
+                    
+                    <div class="button-container">
+                        <Button Color="ButtonColor.Primary">Open</Button>
+                        <a class="btn btn-primary" target="_blank" href="@($"/api/download/survey/{survey.SurveyId}")">Download</a>
+                        <Button Color="ButtonColor.Danger" @onclick="() => DeleteSurveyCallback(survey)">Delete</Button>
+                    </div>
+                </div>
+            }
+        }
+        
+        
         @if (_testList != null)
         {
             foreach (var test in _testList)
@@ -42,7 +55,7 @@
                     @test.TestTitle
                     <div class="button-container">
                         <Button Color="ButtonColor.Primary">Open</Button>
-                        <a class="btn btn-primary" target="_blank" href="@($"/api/download/{test.TestId}")">Download</a>
+                        <a class="btn btn-primary" target="_blank" href="@($"/api/download/test/{test.TestId}")">Download</a>
                         <Button Color="ButtonColor.Danger" @onclick="() => DeleteTestCallback(test)">Delete</Button>
                     </div>
                 </div>
@@ -51,7 +64,6 @@
     </div>
 </div>
 
-<ConfirmDialog @ref="_dialog" />
 
 
 @inject TestFileParserService TestParserService
@@ -62,15 +74,13 @@
 @code {
     private string _uploadResult = string.Empty;
     private string _curUserId = string.Empty;
-    private string _testName = string.Empty;
     private Modal _modal = default!;
     private List<TestownikTestModel>? _testList;
+    private List<SurveyModel>? _surveyList;
     private ConfirmDialog _dialog = null!;
-
+    
     private async Task HandleSelectedFiles(InputFileChangeEventArgs e)
     {
-        if (_testName != string.Empty)
-        {
             var file = e.File;
 
             if (file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
@@ -81,11 +91,6 @@
             {
                 _uploadResult = "Please upload a .zip file.";
             } 
-        }
-        else
-        {
-            _uploadResult = "Make sure you set a correct name for your file!";
-        }
     }
 
     private async Task ProcessZipFileAsync(IBrowserFile file)
@@ -111,7 +116,7 @@
             {
                 _uploadResult = $"!INFO.txt found. Processing survey...";
 
-                var survey = await SurveyParserService.ParseFileAsync(tempDir, _curUserId, _testName);
+                var survey = await SurveyParserService.ParseFileAsync(tempDir, _curUserId);
                 await DbService.DbInsertSurveyAsync(survey);
                 
                 _uploadResult = $"Uploaded '{file.Name}' successfully with !INFO.txt and processed {survey.SQuestions.Count()} question(s).";
@@ -120,9 +125,9 @@
             else
             {
                 _uploadResult = $"!INFO.txt not found. Processing test...";
-
+                var testName = file.Name.Replace(".zip", " ").Trim();
                 
-                var testownikTest = await TestParserService.ParseFileAsync(tempDir, _curUserId, _testName);
+                var testownikTest = await TestParserService.ParseFileAsync(tempDir, _curUserId, testName);
                 await DbService.DbInsertTestAsync(testownikTest);
                             
                 _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count} question(s).";
@@ -151,6 +156,7 @@
         _curUserId = userStringId;
 
         _testList =  await DbService.TestContentsAsync(_curUserId);
+        _surveyList = await DbService.SurveyContentsAsync(_curUserId);
 
         // foreach (var test in _testList)
         // {
@@ -161,7 +167,6 @@
 
     private async Task OnShowUploadModalClick()
     {
-        _testName = string.Empty;
         _uploadResult = string.Empty;
 
         await _modal.ShowAsync();
@@ -171,6 +176,7 @@
     {
         await _modal.HideAsync();
         _testList =  await DbService.TestContentsAsync(_curUserId);
+        _surveyList = await DbService.SurveyContentsAsync(_curUserId);
     }
 
     private async Task DeleteTestCallback(TestownikTestModel test)
@@ -181,6 +187,18 @@
         {
             await DbService.DeleteTestAsync(test);
             _testList =  await DbService.TestContentsAsync(_curUserId);
+
+        }
+    }
+    
+    private async Task DeleteSurveyCallback(SurveyModel survey)
+    {
+        var temp = await ShowConfirmationAsync();
+
+        if (temp)
+        {
+            await DbService.DeleteSurveyAsync(survey);
+            _surveyList =  await DbService.SurveyContentsAsync(_curUserId);
 
         }
     }

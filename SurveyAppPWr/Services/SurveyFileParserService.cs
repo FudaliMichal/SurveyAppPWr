@@ -7,7 +7,7 @@ namespace SurveyAppPWr.Services;
 
 public class SurveyFileParserService
 {
-    public async Task<Survey> ParseFileAsync(string dir, string? curUser, string surveyName)
+    public async Task<Survey> ParseFileAsync(string dir, string? curUser)
     {
         var dirInfo = new DirectoryInfo(dir);
         var files = dirInfo.EnumerateFiles("*.txt", SearchOption.AllDirectories)
