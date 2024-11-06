@@ -1,11 +1,137 @@
 @page "/Answer"
+@using SurveyAppPWr.Data.Survey
+@using SurveyAppPWr.Models.Survey
+@using SurveyAppPWr.Services
 <h3>Answer</h3>
 
+<Modal @ref="_modal" Title="@_modalTitle" IsScrollable="true" Size="ModalSize.ExtraLarge">
+    <BodyTemplate>
+        <div>Author: @_tempSurvey.Author</div>
+        <div>Date of creation: @_tempSurvey.CreationDate</div>
+        
+        <div style="margin-top: 20px">
+            @if (true)
+            {
+                _questionNr = 1;
+            }
+            
+            @foreach (var question in _tempSurvey.SurveyQuestions)
+            {
 
+                switch (question.SQuestionType)
+                {
+                    case true:
+                        <div>@_questionNr. @question.SQuestionText</div>
+
+                        break;
+
+                    case false:
+                        <div>@_questionNr. @question.SQuestionText</div>
+
+                        _answerNr = 'a';
+
+                        foreach (var answer in question.SAnswers)
+                        {
+                            <div style="margin-left: 20px">(@_answerNr) @answer.SAnswerText</div>
+                            _answerNr++;
+                        }
+
+                        break;
+                }
+
+                _questionNr++;
+            }
+        </div>
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideModalClick">Save your answers</Button>
+    </FooterTemplate>
+</Modal>
+
+<div class="scrollable-container">
+    <div class="grid">
+        @if (_surveyList != null)
+        {
+            foreach (var survey in _surveyList)
+            {
+                <div class="grid-item">
+                    @survey.SurveyTitle @survey.Author @survey.CreationDate @survey.IsPublic
+
+                    <div class="button-container">
+                        <Button Color="ButtonColor.Primary" @onclick="() => OnShowModalClick(survey)">Answer this survey</Button>
+                    </div>
+                </div>
+                }
+            }
+    </div>
+</div>
+
+
+@inject AuthenticationStateProvider AuthProvider
+@inject ApplicationDbService DbService
 
 @code {
 
+    private List<SurveyModel>? _surveyList;
+    private SurveyModel _tempSurvey;
+    private string _curUserId = string.Empty;
+    private Modal _modal = default!;
+    private string _modalTitle = string.Empty;
+    private int _questionNr;
+    private char _answerNr = 'a';
+    private List<SurveyFill> _answerList = [];
 
 
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthProvider.GetAuthenticationStateAsync()).User;
+        var userStringId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+        _curUserId = userStringId;
+
+        _surveyList = await DbService.GetPublicSurveysAsync();
+    }
+
+
+
+    private async Task OnShowModalClick(SurveyModel survey)
+    {
+        _questionNr = 1;
+        _tempSurvey = survey;
+        _modalTitle = "Title: " + _tempSurvey.SurveyTitle;
+        
+        await CreateAnswerList(_tempSurvey);
+        await _modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await _modal.HideAsync();
+    }
+
+    private async Task CreateAnswerList(SurveyModel s)
+    {
+        foreach (var question in s.SurveyQuestions)
+        {
+            foreach (var ans in question.SAnswers)
+            {
+                var sFill = new SurveyFill
+                {
+                    SurveyId = s.SurveyId,
+                    SQuestionId = question.SQuesionId,
+                    SQuestionText = question.SQuestionText,
+                    SQuestionType = question.SQuestionType,
+                    UserId = _curUserId,
+                    
+                    SAnswerId = ans.SAnswerId,
+                    SAnswerText = ans.SAnswerText,
+                    IsChosen = false
+                };
+                
+                _answerList.Add(sFill);
+            }
+            
+        }
+    }
 
 }

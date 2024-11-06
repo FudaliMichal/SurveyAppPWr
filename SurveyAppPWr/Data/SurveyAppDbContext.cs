@@ -18,4 +18,8 @@ public class SurveyAppDbContext(DbContextOptions<SurveyAppDbContext> options)
     public DbSet<Survey.Question> SQuestions { get; set; } = default!;
     
     public DbSet<Survey.Answer> SAnswers { get; set; } = default!;
+    
+    
+    
+    public DbSet<Survey.SurveyFill> SurveyFills { get; set; } = default!;
 }

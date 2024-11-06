@@ -38,9 +38,15 @@
                     @survey.SurveyTitle @survey.Author @survey.CreationDate @survey.IsPublic
                     
                     <div class="button-container">
-                        <Button Color="ButtonColor.Primary">Open</Button>
-                        <a class="btn btn-primary" target="_blank" href="@($"/api/download/survey/{survey.SurveyId}")">Download</a>
-                        <Button Color="ButtonColor.Danger" @onclick="() => DeleteSurveyCallback(survey)">Delete</Button>
+                        <Dropdown Color="DropdownColor.Primary">
+                            <DropdownToggleButton></DropdownToggleButton>
+                            <DropdownMenu>
+                                <DropdownItem To="#">Open Statistics</DropdownItem>
+                                <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/survey/{survey.SurveyId}")">Download</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => DeleteSurveyCallback(survey)">Delete</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => SwitchPublicStateCallback(survey)">Make public/private</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
                     </div>
                 </div>
             }
@@ -54,15 +60,21 @@
                 <div class="grid-item">
                     @test.TestTitle
                     <div class="button-container">
-                        <Button Color="ButtonColor.Primary">Open</Button>
-                        <a class="btn btn-primary" target="_blank" href="@($"/api/download/test/{test.TestId}")">Download</a>
-                        <Button Color="ButtonColor.Danger" @onclick="() => DeleteTestCallback(test)">Delete</Button>
+                        <Dropdown Color="DropdownColor.Primary">
+                            <DropdownToggleButton></DropdownToggleButton>
+                            <DropdownMenu>
+                                <DropdownItem To="#">Open Statistics</DropdownItem>
+                                <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/test/{test.TestId}")">Download</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => DeleteTestCallback(test)">Delete</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
                     </div>
                 </div>
             }
         }
     </div>
 </div>
+
 
 
 
@@ -120,7 +132,6 @@
                 await DbService.DbInsertSurveyAsync(survey);
                 
                 _uploadResult = $"Uploaded '{file.Name}' successfully with !INFO.txt and processed {survey.SQuestions.Count()} question(s).";
-
             }
             else
             {
@@ -130,7 +141,7 @@
                 var testownikTest = await TestParserService.ParseFileAsync(tempDir, _curUserId, testName);
                 await DbService.DbInsertTestAsync(testownikTest);
                             
-                _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count} question(s).";
+                _uploadResult = $"Uploaded '{file.Name}' successfully and processed {testownikTest.TestQuestions.Count()} question(s).";
             }
 
 
@@ -213,4 +224,10 @@
         return confirmation;
     }
 
+    private async Task SwitchPublicStateCallback(SurveyModel survey)
+    {
+        await DbService.SurveySwitchPublicStateAsync(survey);
+        StateHasChanged();
+    }
+    
 }

@@ -176,4 +176,45 @@ public class ApplicationDbService
         
         return survey.ToModel();
     }
+
+    public async Task<SurveyModel> SurveySwitchPublicStateAsync(SurveyModel s)
+    {
+        var survey = await _surveyAppDbContext.Surveys
+            .Where(x => x.SurveyId == s.SurveyId)
+            .SingleOrDefaultAsync();
+
+        if (survey == null)
+        {
+            return null;
+        }
+
+        survey.IsPublic = !survey.IsPublic;
+
+        await _surveyAppDbContext.SaveChangesAsync();
+
+        s.IsPublic = survey.IsPublic;
+
+        return s;
+    }
+
+    
+    public async Task<List<SurveyModel>?> GetPublicSurveysAsync()
+    {
+        var surveyList = new List<SurveyModel>();
+        
+        var survey = await _surveyAppDbContext.Surveys
+            .AsNoTracking()
+            .Include(x => x.SQuestions)
+            .ThenInclude(x => x.SAnswers)
+            .Where(x => x.IsPublic == true)
+            .ToListAsync();
+
+        foreach (var surveyEntity in survey)
+        {
+            var temp = surveyEntity.ToModel();
+            surveyList.Add(temp);
+        }
+        
+        return surveyList;
+    }
 }
