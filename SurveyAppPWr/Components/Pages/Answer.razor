@@ -1,4 +1,5 @@
 @page "/Answer"
+@using System.Drawing
 @using SurveyAppPWr.Data.Survey
 @using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Services
@@ -15,24 +16,32 @@
                 _questionNr = 1;
             }
             
-            @foreach (var question in _tempSurvey.SurveyQuestions)
+            @foreach (var q in _questionfills)
             {
 
-                switch (question.SQuestionType)
+                switch (q.SQuestionType)
                 {
                     case true:
-                        <div>@_questionNr. @question.SQuestionText</div>
+                        <div>@_questionNr. @q.SQuestionText</div>
+                        
+                        <InputText @bind-Value="q.OpenAnswer" style="width: 400px; height: 50px;"></InputText>
 
                         break;
 
                     case false:
-                        <div>@_questionNr. @question.SQuestionText</div>
+                        <div>@_questionNr. @q.SQuestionText</div>
 
                         _answerNr = 'a';
 
-                        foreach (var answer in question.SAnswers)
+                        foreach (var a in q.SurveyAnswers)
                         {
-                            <div style="margin-left: 20px">(@_answerNr) @answer.SAnswerText</div>
+                            <div style="margin-left: 20px; cursor: pointer;" @onclick="() => ToggleAnswer(a)">
+                                (@_answerNr) @a.SAnswerText
+                                @if (a.IsChosen)
+                                {
+                                    <span style="color: green;">✔</span>
+                                }
+                            </div>
                             _answerNr++;
                         }
 
@@ -80,7 +89,7 @@
     private string _modalTitle = string.Empty;
     private int _questionNr;
     private char _answerNr = 'a';
-    private List<SurveyFill> _answerList = [];
+    private List<SurveyFill> _questionfills = [];
 
 
     protected override async Task OnInitializedAsync()
@@ -99,6 +108,7 @@
         _questionNr = 1;
         _tempSurvey = survey;
         _modalTitle = "Title: " + _tempSurvey.SurveyTitle;
+        _questionfills.Clear();
         
         await CreateAnswerList(_tempSurvey);
         await _modal.ShowAsync();
@@ -111,27 +121,42 @@
 
     private async Task CreateAnswerList(SurveyModel s)
     {
-        foreach (var question in s.SurveyQuestions)
+        foreach (var q in s.SurveyQuestions)
         {
-            foreach (var ans in question.SAnswers)
+            var qFill = new SurveyFill
             {
-                var sFill = new SurveyFill
-                {
-                    SurveyId = s.SurveyId,
-                    SQuestionId = question.SQuesionId,
-                    SQuestionText = question.SQuestionText,
-                    SQuestionType = question.SQuestionType,
-                    UserId = _curUserId,
-                    
-                    SAnswerId = ans.SAnswerId,
-                    SAnswerText = ans.SAnswerText,
-                    IsChosen = false
-                };
-                
-                _answerList.Add(sFill);
-            }
+                SurveyId = s.SurveyId,
+                SQuestionId = q.SQuesionId,
+                SQuestionText = q.SQuestionText,
+                SQuestionType = q.SQuestionType,
+                UserId = _curUserId,
+                OpenAnswer = string.Empty,
+                SurveyAnswers = []
+            };
             
+            if (q.SQuestionType == false)
+            {
+                foreach (var a in q.SAnswers)
+                {
+                    var ans = new SurveyAnswerFill
+                    {
+                        SAnswerId = a.SAnswerId,
+                        SAnswerText = a.SAnswerText,
+                        IsChosen = false,
+                        SQuestionId = q.SQuesionId
+                    };
+                    
+                    qFill.SurveyAnswers.Add(ans);
+                }
+            }
+
+            _questionfills.Add(qFill);
         }
+    }
+    
+    private async Task ToggleAnswer(SurveyAnswerFill answer)
+    {
+        answer.IsChosen = !answer.IsChosen;
     }
 
 }

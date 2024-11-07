@@ -9,16 +9,10 @@ public class SurveyFillModel
     public string SQuestionText { get; set; } = null!;
     
     public bool SQuestionType { get; set; }
+
+    public List<SurveyAnswerFillModel>? SurveyAnswers { get; set; } = null!;
     
-    
-    
-    public int SAnswerId { get; set; }
-    
-    public string SAnswerText { get; set; } = null!;
-    
-    
-    
-    public bool IsChosen { get; set; }
+    public string? OpenAnswer { get; set; } = null!;
     
     public string UserId { get; set; } = null!;
 }
