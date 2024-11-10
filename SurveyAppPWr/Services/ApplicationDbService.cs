@@ -29,7 +29,14 @@ public class ApplicationDbService
         _surveyAppDbContext.Surveys.Add(surveyEntity);
         await _surveyAppDbContext.SaveChangesAsync();
     }
-    
+
+
+    public async Task DbInsertAnswersAsync(SurveyFill answerEntity)
+    {
+        _surveyAppDbContext.SurveyFills.Add(answerEntity);
+        await _surveyAppDbContext.SaveChangesAsync();
+
+    }
     
     public async Task<List<TestownikTestModel>?> TestContentsAsync(string? userid)
     {
@@ -198,7 +205,7 @@ public class ApplicationDbService
     }
 
     
-    public async Task<List<SurveyModel>?> GetPublicSurveysAsync()
+    public async Task<List<SurveyModel>> GetPublicSurveysAsync()
     {
         var surveyList = new List<SurveyModel>();
         

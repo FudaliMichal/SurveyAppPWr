@@ -3,7 +3,11 @@
 @using SurveyAppPWr.Data.Survey
 @using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Services
-<h3>Answer</h3>
+
+@if (_surveyList != null)
+{
+    <h3>Pick a survey to answer:</h3>
+}
 
 <Modal @ref="_modal" Title="@_modalTitle" IsScrollable="true" Size="ModalSize.ExtraLarge">
     <BodyTemplate>
@@ -25,7 +29,6 @@
                         <div>@_questionNr. @q.SQuestionText</div>
                         
                         <InputText @bind-Value="q.OpenAnswer" style="width: 400px; height: 50px;"></InputText>
-
                         break;
 
                     case false:
@@ -44,7 +47,6 @@
                             </div>
                             _answerNr++;
                         }
-
                         break;
                 }
 
@@ -71,9 +73,14 @@
                         <Button Color="ButtonColor.Primary" @onclick="() => OnShowModalClick(survey)">Answer this survey</Button>
                     </div>
                 </div>
-                }
             }
+        }
     </div>
+    
+    @if(_surveyList == null)
+    {
+        <h4>There are no available surveys at this moment</h4>
+    }
 </div>
 
 
@@ -99,6 +106,10 @@
         _curUserId = userStringId;
 
         _surveyList = await DbService.GetPublicSurveysAsync();
+        if (_surveyList.Count == 0)
+        {
+            _surveyList = null;
+        }
     }
 
 
@@ -116,9 +127,23 @@
 
     private async Task OnHideModalClick()
     {
-        await _modal.HideAsync();
+        if (CheckIfAllQuestionsAnswered())
+        {
+            foreach (var a in _questionfills)
+            {
+                await DbService.DbInsertAnswersAsync(a);
+            }
+
+            await _modal.HideAsync();
+        }
     }
 
+    private bool CheckIfAllQuestionsAnswered()
+    {
+        return _questionfills.All(q => 
+            q.SQuestionType ? !string.IsNullOrWhiteSpace(q.OpenAnswer) : q.SurveyAnswers.Any(a => a.IsChosen));
+    }
+    
     private async Task CreateAnswerList(SurveyModel s)
     {
         foreach (var q in s.SurveyQuestions)

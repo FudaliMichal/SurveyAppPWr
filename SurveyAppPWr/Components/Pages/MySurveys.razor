@@ -1,13 +1,11 @@
 @page "/MySurveys"
 @using System.IO.Compression
 @using System.IO
-@using Microsoft.AspNetCore.Mvc
-@using SurveyAppPWr.Models
 @using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Models.Test
 @using SurveyAppPWr.Services
 
-<h3>My Surveys</h3>
+<h3>Your surveys:</h3>
 
 <Modal @ref="_modal" Title="Upload your file">
     <BodyTemplate>
@@ -168,11 +166,6 @@
 
         _testList =  await DbService.TestContentsAsync(_curUserId);
         _surveyList = await DbService.SurveyContentsAsync(_curUserId);
-
-        // foreach (var test in _testList)
-        // {
-        //     Console.WriteLine(test.TestTitle);
-        // }
     }
     
 
