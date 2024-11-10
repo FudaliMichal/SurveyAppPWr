@@ -73,7 +73,7 @@
                         <div class="answers">
                             @if (question?.Answers != null)
                             {
-                                var answerNr = 1;
+                                var answerNr = 'a';
                                 foreach (var answer in question.Answers)
                                 {
                                     <div>(@answerNr) @answer.AnswerText  (@answer.IsCorrectAnswer.ToString())</div>
@@ -97,17 +97,22 @@
                     var questionNr = 1;
                     foreach (var question in _survey.SQuestions)
                     {
-                        <div class="question" >@questionNr. @question.SQuestionText Is question open: @question.SQuestionType
+                        <div class="question">
+                            
+                            @questionNr. @question.SQuestionText
+                            
                             @if (question.SQuestionType == false)
                             {
-                                <Button Color="ButtonColor.Primary" @onclick="() => OnShowSAnswerModalClick(question)">Add answer</Button>
+                                <div style="margin-left: 20px">
+                                    <Button Color="ButtonColor.Primary" @onclick="() => OnShowSAnswerModalClick(question)">Add answer</Button>
+                                </div>
                             }
                         </div>
 
                         <div class="answers">
                             @if (question?.SAnswers != null)
                             {
-                                var answerNr = 1;
+                                var answerNr = 'a';
                                 foreach (var answer in question.SAnswers)
                                 {
                                     <div>(@answerNr) @answer.SAnswerText</div>
@@ -130,17 +135,17 @@
 <Modal @ref="_testQuestionModal" Title="What's your question?">
     <BodyTemplate>
         
-        <InputText ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
+        <InputText style="width: 400px; height: 50px;" ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
     
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="OnHideQuestionModalClick">Add question</Button>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideQuestionModalClick">Save</Button>
     </FooterTemplate>
 </Modal>
 
 <Modal @ref="_testAnswerModal" Title="Set answer">
     <BodyTemplate>
-        <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
+        <InputText style="width: 400px; height: 50px;" ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
 
         <div>Is this answer true or false?</div>
         
@@ -155,7 +160,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="OnHideAnswerModalClick">Add answer</Button>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideAnswerModalClick">Save</Button>
     </FooterTemplate>
 </Modal>
 
@@ -163,27 +168,28 @@
 
 <Modal @ref="_surveyQuestionModal" Title="What's your question?">
     <BodyTemplate>
-        <InputText ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
+        <InputText style="width: 400px; height: 50px;" ValueExpression="() => _questionText" ValueChanged="(value) => _questionText = value"></InputText>
 
         <p>
             <div>Set question type:</div>
             <Button Color="ButtonColor.Primary" @onclick="() => _questionType = true">Open-text question</Button>
             <Button Color="ButtonColor.Primary" @onclick="() => _questionType = false">Closed-ended question</Button>
         </p>
+            
     
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="OnHideSQuestionModalClick">Add question</Button>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideSQuestionModalClick">Save</Button>
     </FooterTemplate>
 </Modal>
 
 <Modal @ref="_surveyAnswerModal" Title="Set answer">
     <BodyTemplate>
-        <InputText ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
+        <InputText style="width: 400px; height: 50px;" ValueExpression="() => _answerText" ValueChanged="(value) => _answerText = value"></InputText>
 
     </BodyTemplate>
     <FooterTemplate>
-        <Button Color="ButtonColor.Primary" @onclick="OnHideSAnswerModalClick">Add answer</Button>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideSAnswerModalClick">Save</Button>
     </FooterTemplate>
 </Modal>
 

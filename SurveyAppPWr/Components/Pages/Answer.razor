@@ -67,10 +67,16 @@
             foreach (var survey in _surveyList)
             {
                 <div class="grid-item">
-                    @survey.SurveyTitle @survey.Author @survey.CreationDate @survey.IsPublic
+                    <h4>@survey.SurveyTitle</h4>
+
+                    <div class="bottom-info">
+                        <span>@survey.CreationDate.ToShortDateString()</span>
+                        <span>@survey.Author</span>
+                        
+                    </div>
 
                     <div class="button-container">
-                        <Button Color="ButtonColor.Primary" @onclick="() => OnShowModalClick(survey)">Answer this survey</Button>
+                        <Button Color="ButtonColor.Primary" @onclick="() => OnShowModalClick(survey)">Open</Button>
                     </div>
                 </div>
             }
@@ -181,7 +187,21 @@
     
     private async Task ToggleAnswer(SurveyAnswerFill answer)
     {
-        answer.IsChosen = !answer.IsChosen;
+        var question = _questionfills.FirstOrDefault(q => q.SurveyAnswers.Contains(answer));
+    
+        if (question != null)
+        {
+            foreach (var a in question.SurveyAnswers)
+            {
+                if (a != answer)
+                {
+                    a.IsChosen = false;
+                }
+            }
+
+            answer.IsChosen = !answer.IsChosen;
+        }
     }
+
 
 }

@@ -33,8 +33,14 @@
             foreach (var survey in _surveyList)
             {
                 <div class="grid-item">
-                    @survey.SurveyTitle @survey.Author @survey.CreationDate @survey.IsPublic
+                    <h4>@survey.SurveyTitle</h4>
                     
+                    <div class="bottom-info">
+                        <span>Question count:@survey.SurveyQuestions.Count</span>
+                        <span>@survey.CreationDate.ToShortDateString(), @(survey.IsPublic ? "Public" : "Private")</span>
+                        <span><strong>Author:</strong> @survey.Author</span>
+                    </div>
+
                     <div class="button-container">
                         <Dropdown Color="DropdownColor.Primary">
                             <DropdownToggleButton></DropdownToggleButton>
@@ -49,29 +55,37 @@
                 </div>
             }
         }
-        
-        
+
         @if (_testList != null)
         {
-            foreach (var test in _testList)
-            {
-                <div class="grid-item">
-                    @test.TestTitle
-                    <div class="button-container">
-                        <Dropdown Color="DropdownColor.Primary">
-                            <DropdownToggleButton></DropdownToggleButton>
-                            <DropdownMenu>
-                                <DropdownItem To="#">Open Statistics</DropdownItem>
-                                <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/test/{test.TestId}")">Download</DropdownItem>
-                                <DropdownItem To="#" @onclick="() => DeleteTestCallback(test)">Delete</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                    </div>
-                </div>
-            }
+        foreach (var test in _testList)
+        {
+        <div class="grid-item-test">
+            <h4>@test.TestTitle</h4>
+
+            <div class="question-info">
+                <p><strong>Question count:</strong> @test.TestQuestions.Count</p>
+            </div>
+            
+            <div class="bottom-info">
+                <span>Test</span>
+            </div>
+
+            <div class="button-container">
+                <Dropdown Color="DropdownColor.Primary">
+                    <DropdownToggleButton></DropdownToggleButton>
+                    <DropdownMenu>
+                        <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/test/{test.TestId}")">Download</DropdownItem>
+                        <DropdownItem To="#" @onclick="() => DeleteTestCallback(test)">Delete</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
+            </div>
+        </div>
+        }
         }
     </div>
 </div>
+
 
 
 
