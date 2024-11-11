@@ -224,4 +224,25 @@ public class ApplicationDbService
         
         return surveyList;
     }
+
+
+    public async Task<double[]> GetSurveyAnswerCountByID(QuestionModel q)
+    {
+        var list = new List<double>();
+
+        foreach (var a in q.SAnswers)
+        {
+            var ans = await _surveyAppDbContext.AnswerFills
+                .AsNoTracking()
+                .Where(x => x.SAnswerId == a.SAnswerId && x.IsChosen == true)
+                .ToListAsync();
+        
+            var count = ans.Count;
+            
+            list.Add(count);
+            // Console.WriteLine($"{count} : {a.SAnswerId}");
+        }
+        
+        return await Task.FromResult(list.ToArray());
+    }
 }

@@ -4,7 +4,8 @@ namespace SurveyAppPWr.Data.Survey;
 
 public class SurveyAnswerFill
 {
-    [Key]   
+    [Key]
+    public int Id { get; set; }
     public int SAnswerId { get; set; }
     
     public int SQuestionId { get; set; }

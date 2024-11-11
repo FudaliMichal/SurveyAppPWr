@@ -4,6 +4,8 @@
 @using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Models.Test
 @using SurveyAppPWr.Services
+@using Blazorise.Charts
+@using SurveyAppPWr.Components
 
 <h3>Your surveys:</h3>
 
@@ -45,7 +47,7 @@
                         <Dropdown Color="DropdownColor.Primary">
                             <DropdownToggleButton></DropdownToggleButton>
                             <DropdownMenu>
-                                <DropdownItem To="#">Open Statistics</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => OnShowSModalClick(survey)">Open Statistics</DropdownItem>
                                 <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/survey/{survey.SurveyId}")">Download</DropdownItem>
                                 <DropdownItem To="#" @onclick="() => DeleteSurveyCallback(survey)">Delete</DropdownItem>
                                 <DropdownItem To="#" @onclick="() => SwitchPublicStateCallback(survey)">Make public/private</DropdownItem>
@@ -58,34 +60,53 @@
 
         @if (_testList != null)
         {
-        foreach (var test in _testList)
-        {
-        <div class="grid-item-test">
-            <h4>@test.TestTitle</h4>
+            foreach (var test in _testList)
+            {
+                <div class="grid-item-test">
+                    <h4>@test.TestTitle</h4>
 
-            <div class="question-info">
-                <p><strong>Question count:</strong> @test.TestQuestions.Count</p>
-            </div>
-            
-            <div class="bottom-info">
-                <span>Test</span>
-            </div>
+                    <div class="question-info">
+                        <p><strong>Question count:</strong> @test.TestQuestions.Count</p>
+                    </div>
+                    
+                    <div class="bottom-info">
+                        <span>Test</span>
+                    </div>
 
-            <div class="button-container">
-                <Dropdown Color="DropdownColor.Primary">
-                    <DropdownToggleButton></DropdownToggleButton>
-                    <DropdownMenu>
-                        <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/test/{test.TestId}")">Download</DropdownItem>
-                        <DropdownItem To="#" @onclick="() => DeleteTestCallback(test)">Delete</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </div>
-        </div>
-        }
+                    <div class="button-container">
+                        <Dropdown Color="DropdownColor.Primary">
+                            <DropdownToggleButton></DropdownToggleButton>
+                            <DropdownMenu>
+                                <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/test/{test.TestId}")">Download</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => DeleteTestCallback(test)">Delete</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                    </div>
+                </div>
+            }
         }
     </div>
 </div>
 
+
+<Modal @ref="_statisticsmodal" Title="@_statisticsmodaltitle" IsScrollable="true" Size="ModalSize.ExtraLarge">
+    <BodyTemplate>
+        
+        @foreach (var item in _chartData)
+        {
+            <div>@item.QuestionText</div>
+            <MudBlazor.MudPaper Class="pa-4" Style="width:400px">
+                <MudBlazor.MudChart ChartType="MudBlazor.ChartType.Pie" InputData="@item.Data"
+                                    InputLabels="@item.Labels" Width="300px" Height="300px">
+                </MudBlazor.MudChart>
+            </MudBlazor.MudPaper>
+        }
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Primary" @onclick="OnHideSModalClick">Close</Button>
+    </FooterTemplate>
+</Modal>
 
 
 
@@ -96,12 +117,40 @@
 @inject ApplicationDbService DbService
 
 @code {
+    private List<(string QuestionText, double[] Data, string[] Labels)> _chartData = new();    
+    
     private string _uploadResult = string.Empty;
     private string _curUserId = string.Empty;
     private Modal _modal = default!;
     private List<TestownikTestModel>? _testList;
     private List<SurveyModel>? _surveyList;
     private ConfirmDialog _dialog = null!;
+    
+    private Modal _statisticsmodal = default!;
+    private string _statisticsmodaltitle = string.Empty;
+    private SurveyModel _tempStatSurvey;
+
+    private async Task<double[]> GetData(QuestionModel q)
+    {
+        return await DbService.GetSurveyAnswerCountByID(q);
+    }
+    
+    private async Task<string[]> GetLabelsAsync(QuestionModel q, double[] data)
+    {
+        var list = new List<string>();
+        var c = 0;
+        
+        foreach (var a in q.SAnswers)
+        {
+            list.Add($"{a.SAnswerText} - {data[c]}");
+            c++;
+            // Console.WriteLine(a.SAnswerText);
+        }
+
+        return await Task.FromResult(list.ToArray());
+    }
+
+    
     
     private async Task HandleSelectedFiles(InputFileChangeEventArgs e)
     {
@@ -182,6 +231,28 @@
         _surveyList = await DbService.SurveyContentsAsync(_curUserId);
     }
     
+    private async Task OnShowSModalClick(SurveyModel s)
+    {
+        _tempStatSurvey = s;
+        _statisticsmodaltitle = $"{_tempStatSurvey.SurveyTitle} - Survey Statistics";
+        
+        _chartData.Clear();
+        
+        foreach (var q in _tempStatSurvey.SurveyQuestions)
+        {
+            var data = await GetData(q); // Synchronous or asynchronous as required
+            var labels = await GetLabelsAsync(q,data); // Asynchronous call
+            
+            _chartData.Add((q.SQuestionText, data, labels));
+        }
+        
+        await _statisticsmodal.ShowAsync();
+    }
+
+    private async Task OnHideSModalClick()
+    {
+        await _statisticsmodal.HideAsync();
+    }
 
     private async Task OnShowUploadModalClick()
     {
