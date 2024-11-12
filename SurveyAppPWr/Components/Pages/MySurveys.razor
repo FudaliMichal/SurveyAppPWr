@@ -4,8 +4,11 @@
 @using SurveyAppPWr.Models.Survey
 @using SurveyAppPWr.Models.Test
 @using SurveyAppPWr.Services
-@using Blazorise.Charts
-@using SurveyAppPWr.Components
+@using MudBlazor
+
+<head>
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet"/>
+</head>
 
 <h3>Your surveys:</h3>
 
@@ -38,7 +41,7 @@
                     <h4>@survey.SurveyTitle</h4>
                     
                     <div class="bottom-info">
-                        <span>Question count:@survey.SurveyQuestions.Count</span>
+                        <span>Question count: @survey.SurveyQuestions.Count</span>
                         <span>@survey.CreationDate.ToShortDateString(), @(survey.IsPublic ? "Public" : "Private")</span>
                         <span><strong>Author:</strong> @survey.Author</span>
                     </div>
@@ -47,7 +50,7 @@
                         <Dropdown Color="DropdownColor.Primary">
                             <DropdownToggleButton></DropdownToggleButton>
                             <DropdownMenu>
-                                <DropdownItem To="#" @onclick="() => OnShowSModalClick(survey)">Open Statistics</DropdownItem>
+                                <DropdownItem To="#" @onclick="() => OnShowSModalClick(survey)">Statistics</DropdownItem>
                                 <DropdownItem To="#" Type="DropdownItemType.Link" href="@($"/api/download/survey/{survey.SurveyId}")">Download</DropdownItem>
                                 <DropdownItem To="#" @onclick="() => DeleteSurveyCallback(survey)">Delete</DropdownItem>
                                 <DropdownItem To="#" @onclick="() => SwitchPublicStateCallback(survey)">Make public/private</DropdownItem>
@@ -89,17 +92,43 @@
 </div>
 
 
-<Modal @ref="_statisticsmodal" Title="@_statisticsmodaltitle" IsScrollable="true" Size="ModalSize.ExtraLarge">
+<Modal @ref="_statisticsmodal" Title="@_statisticsmodaltitle" IsScrollable="true" Size="ModalSize.Large">
     <BodyTemplate>
+
+        @if (true)
+        {
+            _questionNr = 1;
+        }
         
         @foreach (var item in _chartData)
         {
-            <div>@item.QuestionText</div>
-            <MudBlazor.MudPaper Class="pa-4" Style="width:400px">
-                <MudBlazor.MudChart ChartType="MudBlazor.ChartType.Pie" InputData="@item.Data"
-                                    InputLabels="@item.Labels" Width="300px" Height="300px">
-                </MudBlazor.MudChart>
-            </MudBlazor.MudPaper>
+                
+                if (item.QuestionType == false)
+                {
+                    <div style="margin-top: 10px; font-size: large; font-weight: bold;">@_questionNr. @item.QuestionText</div>
+                    
+                    <div style="display: flex; justify-content: center; margin-top: 10px;">
+                        <MudBlazor.MudPaper Class="pa-4" Style="width:400px">
+                            <MudBlazor.MudChart ChartType="MudBlazor.ChartType.Pie" InputData="@item.Data"
+                                                InputLabels="@item.Labels" Width="300px" Height="300px">
+                            </MudBlazor.MudChart>
+                        </MudBlazor.MudPaper>
+                    </div>
+                }
+                else
+                {
+                    <div style="margin-top: 10px; font-size: large; font-weight: bold;">@_questionNr. @item.QuestionText</div>
+                    <div>Answers provided by users:</div>
+                    
+                    @foreach (var i in item.OpenAns)
+                    {
+                        <div style="margin-left: 20px">- @i</div>
+                    }
+                }
+
+                _questionNr++;
+
+                <hr style="margin-top: 20px; border: 1px solid #ccc;" />
         }
 
     </BodyTemplate>
@@ -117,7 +146,7 @@
 @inject ApplicationDbService DbService
 
 @code {
-    private List<(string QuestionText, double[] Data, string[] Labels)> _chartData = new();    
+    private List<(bool QuestionType, string QuestionText, string[] OpenAns, double[] Data, string[] Labels)> _chartData = new();    
     
     private string _uploadResult = string.Empty;
     private string _curUserId = string.Empty;
@@ -129,6 +158,8 @@
     private Modal _statisticsmodal = default!;
     private string _statisticsmodaltitle = string.Empty;
     private SurveyModel _tempStatSurvey;
+
+    private int _questionNr = 1;
 
     private async Task<double[]> GetData(QuestionModel q)
     {
@@ -183,7 +214,6 @@
             ZipFile.ExtractToDirectory(tempZipPath, tempDir);
             // Console.WriteLine(tempDir);
             
-            //rozroznianie miedzy ankieta a testem
             var infoFilePath = Path.Combine(tempDir, "!INFO.txt");
             if (File.Exists(infoFilePath))
             {
@@ -235,15 +265,28 @@
     {
         _tempStatSurvey = s;
         _statisticsmodaltitle = $"{_tempStatSurvey.SurveyTitle} - Survey Statistics";
+        _questionNr = 1;
         
         _chartData.Clear();
         
         foreach (var q in _tempStatSurvey.SurveyQuestions)
         {
-            var data = await GetData(q); // Synchronous or asynchronous as required
-            var labels = await GetLabelsAsync(q,data); // Asynchronous call
+            if (q.SQuestionType == false)
+            {
+                var data = await GetData(q);
+                var labels = await GetLabelsAsync(q,data);
+                string[] list = [];
             
-            _chartData.Add((q.SQuestionText, data, labels));
+                _chartData.Add((q.SQuestionType, q.SQuestionText, list, data, labels));
+            }
+            else if (q.SQuestionType)
+            {
+                double[] data = [];
+                string[] labels = [];
+                string[] list = await DbService.GetOpenSurveyAnswerCountByID(q);
+                
+                _chartData.Add((q.SQuestionType, q.SQuestionText, list, data, labels));
+            }
         }
         
         await _statisticsmodal.ShowAsync();

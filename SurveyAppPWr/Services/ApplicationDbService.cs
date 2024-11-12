@@ -245,4 +245,22 @@ public class ApplicationDbService
         
         return await Task.FromResult(list.ToArray());
     }
+    
+    public async Task<string[]> GetOpenSurveyAnswerCountByID(QuestionModel q)
+    {
+        var list = new List<string>();
+
+        var ans = await _surveyAppDbContext.SurveyFills
+            .AsNoTracking()
+            .Where(x => x.SQuestionId == q.SQuesionId && x.SQuestionType == true)
+            .ToListAsync();
+    
+        foreach (var a in ans)
+        {
+            list.Add(a.OpenAnswer);
+        }
+        
+        
+        return await Task.FromResult(list.ToArray());
+    }
 }
