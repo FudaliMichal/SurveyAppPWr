@@ -1,3 +1,5 @@
+using TextLocalizer;
+
 namespace SurveyAppPWr.Models.Survey;
 
 public class AnswerModel
@@ -6,3 +8,4 @@ public class AnswerModel
 
     public string SAnswerText { get; set; } = null!;
 }
+

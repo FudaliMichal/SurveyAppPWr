@@ -56,7 +56,11 @@ public class TestFileParserService
                 answers.Add(answer);
             }
         }
-        else Console.WriteLine("File is not valid!");
+        else
+        {
+            Console.WriteLine("File is not valid!");
+            return null;
+        }
 
         
         var allLines = fileContents.Split('\n');

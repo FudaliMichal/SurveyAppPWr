@@ -160,26 +160,24 @@ public class ApplicationDbService
 
     public async Task<TestownikTestModel> GetTestByIdAsync(int testId)
     {
-        var test = _surveyAppDbContext.Tests
+        var test = await _surveyAppDbContext.Tests
             .AsNoTracking()
             .Include(x => x.TestQuestions)
             .ThenInclude(x => x.Answers)
             .Where(x => x.TestId == testId)
-            .SingleOrDefaultAsync()
-            .Result;
+            .SingleOrDefaultAsync();
         
         return test.ToModel();
     }
     
     public async Task<SurveyModel> GetSurveyByIdAsync(int surveyId)
     {
-        var survey = _surveyAppDbContext.Surveys
+        var survey = await _surveyAppDbContext.Surveys
             .AsNoTracking()
             .Include(x => x.SQuestions)
             .ThenInclude(x => x.SAnswers)
             .Where(x => x.SurveyId == surveyId)
-            .SingleOrDefaultAsync()
-            .Result;
+            .SingleOrDefaultAsync();
         
         return survey.ToModel();
     }
@@ -243,7 +241,7 @@ public class ApplicationDbService
             // Console.WriteLine($"{count} : {a.SAnswerId}");
         }
         
-        return await Task.FromResult(list.ToArray());
+        return list.ToArray();
     }
     
     public async Task<string[]> GetOpenSurveyAnswerCountByID(QuestionModel q)
@@ -255,12 +253,14 @@ public class ApplicationDbService
             .Where(x => x.SQuestionId == q.SQuesionId && x.SQuestionType == true)
             .ToListAsync();
     
+        //zmien an ToArrayAsync() i nie zmieniaj listy na array
+        
         foreach (var a in ans)
         {
             list.Add(a.OpenAnswer);
         }
         
         
-        return await Task.FromResult(list.ToArray());
+        return list.ToArray();
     }
 }
